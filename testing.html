@@ -69,6 +69,12 @@ function loadContent() {
   contentFrame.src = fullUrl;
 }
 
+function updateFrameUrl() {
+  const url = contentFrame.contentWindow.location.href;
+  const fullUrl = proxyUrl + encodeURIComponent(url);
+  contentFrame.src = fullUrl;
+}
+
 loadButton.addEventListener('click', loadContent);
 
 searchInput.addEventListener('keyup', function(event) {
@@ -81,6 +87,11 @@ searchInput.addEventListener('keyup', function(event) {
 searchInput.addEventListener('click', function() {
   searchInput.value = "";
 });
+
+contentFrame.addEventListener('load', function() {
+  updateFrameUrl();
+});
+
 </script>
 </body>
 </html>
