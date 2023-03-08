@@ -6,16 +6,14 @@
       body {
         background-color: #1a1a1a;
         color: #fff;
-        font-family: "Open Sans", sans-serif;
+        font-family: 'Open Sans', sans-serif;
       }
-
       h3 {
         font-size: 36px;
         font-weight: bold;
         text-align: center;
         margin-top: 50px;
       }
-
       input[type="text"] {
         width: 70%;
         height: 40px;
@@ -28,7 +26,6 @@
         background-color: #3c3c3c;
         color: #fff;
       }
-
       button {
         height: 40px;
         font-size: 18px;
@@ -42,52 +39,43 @@
         cursor: pointer;
         padding: 10px;
       }
-
       iframe {
         margin-top: 50px;
         width: 100%;
         height: 600px;
         border: none;
       }
-
-      .spinner {
-        border: 16px solid #f3f3f3;
-        border-top: 16px solid #3498db;
-        border-radius: 50%;
-        width: 120px;
-        height: 120px;
-        animation: spin 2s linear infinite;
-        margin: 0 auto;
-        margin-top: 100px;
+      #content {
+        border: 2px solid #ccc;
       }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+      #error {
+        display: none;
+        text-align: center;
+        margin-top: 50px;
+        font-size: 24px;
+        font-weight: bold;
+        color: red;
       }
     </style>
   </head>
   <body>
     <h3>incognito+</h3>
-    <input
-      type="text"
-      id="search"
-      placeholder="https://www.example.com/"
-      autocomplete="off"
-    />
+    <input type="text" id="search" placeholder="https://www.example.com/" autocomplete="off">
     <button id="load">Run</button>
-    <div id="spinner-container"></div>
-    <br />
+    <br>
     <iframe id="content"></iframe>
+    <div id="error">Failed to load content. Please try again later.</div>
     <script>
 const proxyUrl = 'https://api.allorigins.win/raw?url=';
 const searchInput = document.getElementById('search');
 const loadButton = document.getElementById('load');
 const contentFrame = document.getElementById('content');
+const proxyFrame = document.getElementById('proxy');
+
+// Set the initial proxy frame height to match the content frame height
+contentFrame.addEventListener('load', () => {
+  proxyFrame.style.height = contentFrame.contentWindow.document.body.scrollHeight + 'px';
+});
 
 function loadContent() {
   const url = searchInput.value;
@@ -108,29 +96,35 @@ searchInput.addEventListener('click', function() {
   searchInput.value = "";
 });
 
-// Run all the links through the proxy
-contentFrame.addEventListener('load', function() {
-  const proxyLinks = contentFrame.contentDocument.getElementsByTagName('a');
-  for (let i = 0; i < proxyLinks.length; i++) {
-    proxyLinks[i].setAttribute('href', proxyUrl + encodeURIComponent(proxyLinks[i].href));
-    proxyLinks[i].setAttribute('target', '_blank');
+// Set a timeout function to handle if the iframe takes too long to load
+const timeout = setTimeout(() => {
+  contentFrame.remove();
+  proxyFrame.insertAdjacentHTML('beforeend', '<p>Failed to load content. Please try again later.</p>');
+}, 30000);
+
+// Check if the iframe has loaded successfully
+contentFrame.addEventListener('load', () => {
+  clearTimeout(timeout);
+  
+  // Set the proxy frame border to visible
+  proxyFrame.style.border = '1px solid #ccc';
+
+  // Set the proxy frame height to match the content frame height
+  proxyFrame.style.height = contentFrame.contentWindow.document.body.scrollHeight + 'px';
+
+  // Allow the iframe to run its scripts
+  const scriptTags = contentFrame.contentWindow.document.getElementsByTagName('script');
+  for (let i = 0; i < scriptTags.length; i++) {
+    const scriptTag = document.createElement('script');
+    scriptTag.type = scriptTags[i].type || 'text/javascript';
+    if (scriptTags[i].innerHTML) {
+      scriptTag.innerHTML = scriptTags[i].innerHTML;
+    } else if (scriptTags[i].src) {
+      scriptTag.src = scriptTags[i].src;
+    }
+    contentFrame.contentWindow.document.body.appendChild(scriptTag);
   }
 });
-
-// Reduce lag of the iframe when loaded
-contentFrame.addEventListener('load', function() {
-  const iframeDoc = contentFrame.contentDocument;
-  const style = iframeDoc.createElement('style');
-  style.innerHTML = `
-    * {
-      animation-duration: 0s !important;
-      transition-duration: 0s !important;
-      transition-delay: 0s !important;
-    }
-  `;
-  iframeDoc.head.appendChild(style);
-});
-
     </script>
   </body>
 </html>
