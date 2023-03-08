@@ -8,70 +8,79 @@
       color: #fff;
       font-family: 'Open Sans', sans-serif;
     }
+
     h3 {
-  font-size: 36px;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 50px;
-}
+      font-size: 36px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 50px;
+    }
 
-input[type="text"] {
-  width: 70%;
-  height: 40px;
-  padding: 10px;
-  font-size: 18px;
-  border: none;
-  border-radius: 5px;
-  margin-top: 50px;
-  margin-left: 15%;
-  background-color: #3c3c3c;
-  color: #fff;
-}
+    input[type="text"] {
+      width: 70%;
+      height: 40px;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 50px;
+      margin-left: 15%;
+      background-color: #3c3c3c;
+      color: #fff;
+    }
 
-button {
-  height: 40px;
-  font-size: 18px;
-  font-weight: bold;
-  border: none;
-  border-radius: 5px;
-  margin-top: 50px;
-  margin-left: 20px;
-  background-color: #9e9e9e;
-  color: #fff;
-  cursor: pointer;
-}
+    button {
+      height: 40px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      margin-top: 50px;
+      margin-left: 20px;
+      background-color: #9e9e9e;
+      color: #fff;
+      cursor: pointer;
+      padding: 10px;
+    }
 
-iframe {
-  margin-top: 50px;
-  width: 100%;
-  height: 600px;
-  border: none;
-}
-</style>
+    iframe {
+      margin-top: 50px;
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+  </style>
 </head>
 <body>
-
   <h3>incognito+</h3>
   <input type="text" id="search" placeholder="https://www.example.com/" autocomplete="off">
   <button id="load">Run</button>
   <br>
   <iframe id="content"></iframe>
+
   <script>
     const proxyUrl = 'https://api.allorigins.win/raw?url=';
     const searchInput = document.getElementById('search');
     const loadButton = document.getElementById('load');
     const contentFrame = document.getElementById('content');
 
-    loadButton.addEventListener('click', () => {
+    function loadContent() {
       const url = searchInput.value;
       const fullUrl = proxyUrl + encodeURIComponent(url);
       contentFrame.src = fullUrl;
+    }
+
+    loadButton.addEventListener('click', loadContent);
+
+    searchInput.addEventListener('keyup', function(event) {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        loadButton.click();
+      }
     });
 
-    const inputElement = document.querySelector("#search");
-
-    inputElement.addEventListener("click", function() {
-      inputElement.value = "";
+    searchInput.addEventListener('click', function() {
+      searchInput.value = "";
     });
   </script>
 </body>
