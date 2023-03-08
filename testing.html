@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Load website in an iframe with proxy</title>
+</head>
+<body>
+<h3>Online API Proxy Bypass V1.2</h3>
+  <input type="text" id="search" placeholder="https://www.example.com/" autocomplete="off">
+  <button id="load">Run</button>
+  <br>
+  <iframe id="content" src="" frameborder="0" style="width:100%; height:600px;"></iframe>
+
+  <script>
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    const searchInput = document.getElementById('search');
+    const loadButton = document.getElementById('load');
+    const contentFrame = document.getElementById('content');
+
+    loadButton.addEventListener('click', () => {
+      const url = searchInput.value;
+      const fullUrl = proxyUrl + encodeURIComponent(url);
+      contentFrame.src = fullUrl;
+    });
+const inputElement = document.querySelector("#search");
+
+inputElement.addEventListener("click", function() {
+  inputElement.value = "";
+});
+  </script>
+</body>
+</html>
