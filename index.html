@@ -2,13 +2,60 @@
 <html>
 <head>
   <title>Load website in an iframe with proxy</title>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #fff;
+      font-family: 'Open Sans', sans-serif;
+    }
+    h3 {
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 50px;
+}
+
+input[type="text"] {
+  width: 70%;
+  height: 40px;
+  padding: 10px;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  margin-top: 50px;
+  margin-left: 15%;
+  background-color: #3c3c3c;
+  color: #fff;
+}
+
+button {
+  height: 40px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  margin-top: 50px;
+  margin-left: 20px;
+  background-color: #9e9e9e;
+  color: #fff;
+  cursor: pointer;
+}
+
+iframe {
+  margin-top: 50px;
+  width: 100%;
+  height: 600px;
+  border: none;
+}
+</style>
 </head>
 <body>
-  <input type="text" id="search" placeholder="Enter website URL">
-  <button id="load">Load</button>
-  <br>
-  <iframe id="content" src="" frameborder="0" style="width:100%; height:500px;"></iframe>
 
+  <h3>incognito+</h3>
+  <input type="text" id="search" placeholder="https://www.example.com/" autocomplete="off">
+  <button id="load">Run</button>
+  <br>
+  <iframe id="content"></iframe>
   <script>
     const proxyUrl = 'https://api.allorigins.win/raw?url=';
     const searchInput = document.getElementById('search');
@@ -19,6 +66,12 @@
       const url = searchInput.value;
       const fullUrl = proxyUrl + encodeURIComponent(url);
       contentFrame.src = fullUrl;
+    });
+
+    const inputElement = document.querySelector("#search");
+
+    inputElement.addEventListener("click", function() {
+      inputElement.value = "";
     });
   </script>
 </body>
