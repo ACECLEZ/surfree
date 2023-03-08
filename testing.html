@@ -1,63 +1,89 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>incognito+</title>
-<style>
-body {
-  background-color: #1a1a1a;
-  color: #fff;
-  font-family: 'Open Sans', sans-serif;
-}
+  <head>
+    <title>incognito+</title>
+    <style>
+      body {
+        background-color: #1a1a1a;
+        color: #fff;
+        font-family: "Open Sans", sans-serif;
+      }
 
-h3 {
-  font-size: 36px;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 50px;
-}
+      h3 {
+        font-size: 36px;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 50px;
+      }
 
-input[type="text"] {
-  width: 70%;
-  height: 40px;
-  padding: 10px;
-  font-size: 18px;
-  border: none;
-  border-radius: 5px;
-  margin-top: 50px;
-  margin-left: 15%;
-  background-color: #3c3c3c;
-  color: #fff;
-}
+      input[type="text"] {
+        width: 70%;
+        height: 40px;
+        padding: 10px;
+        font-size: 18px;
+        border: none;
+        border-radius: 5px;
+        margin-top: 50px;
+        margin-left: 15%;
+        background-color: #3c3c3c;
+        color: #fff;
+      }
 
-button {
-  height: 40px;
-  font-size: 18px;
-  font-weight: bold;
-  border: none;
-  border-radius: 5px;
-  margin-top: 50px;
-  margin-left: 20px;
-  background-color: #9e9e9e;
-  color: #fff;
-  cursor: pointer;
-  padding: 10px;
-}
+      button {
+        height: 40px;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        border-radius: 5px;
+        margin-top: 50px;
+        margin-left: 20px;
+        background-color: #9e9e9e;
+        color: #fff;
+        cursor: pointer;
+        padding: 10px;
+      }
 
-iframe {
-  margin-top: 50px;
-  width: 100%;
-  height: 600px;
-}
+      iframe {
+        margin-top: 50px;
+        width: 100%;
+        height: 600px;
+        border: none;
+      }
 
-</style>
-</head>
-<body>
-<h3>incognito+</h3>
-<input type="text" id="search" placeholder="https://www.example.com/" autocomplete="off">
-<button id="load">Run</button>
-<br>
-<iframe id="content" sandbox="allow-scripts"></iframe>
-<script>
+      .spinner {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+        margin: 0 auto;
+        margin-top: 100px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h3>incognito+</h3>
+    <input
+      type="text"
+      id="search"
+      placeholder="https://www.example.com/"
+      autocomplete="off"
+    />
+    <button id="load">Run</button>
+    <div id="spinner-container"></div>
+    <br />
+    <iframe id="content"></iframe>
+    <script>
 const proxyUrl = 'https://api.allorigins.win/raw?url=';
 const searchInput = document.getElementById('search');
 const loadButton = document.getElementById('load');
@@ -65,12 +91,6 @@ const contentFrame = document.getElementById('content');
 
 function loadContent() {
   const url = searchInput.value;
-  const fullUrl = proxyUrl + encodeURIComponent(url);
-  contentFrame.src = fullUrl;
-}
-
-function updateFrameUrl() {
-  const url = contentFrame.contentWindow.location.href;
   const fullUrl = proxyUrl + encodeURIComponent(url);
   contentFrame.src = fullUrl;
 }
@@ -88,10 +108,29 @@ searchInput.addEventListener('click', function() {
   searchInput.value = "";
 });
 
+// Run all the links through the proxy
 contentFrame.addEventListener('load', function() {
-  updateFrameUrl();
+  const proxyLinks = contentFrame.contentDocument.getElementsByTagName('a');
+  for (let i = 0; i < proxyLinks.length; i++) {
+    proxyLinks[i].setAttribute('href', proxyUrl + encodeURIComponent(proxyLinks[i].href));
+    proxyLinks[i].setAttribute('target', '_blank');
+  }
 });
 
-</script>
-</body>
+// Reduce lag of the iframe when loaded
+contentFrame.addEventListener('load', function() {
+  const iframeDoc = contentFrame.contentDocument;
+  const style = iframeDoc.createElement('style');
+  style.innerHTML = `
+    * {
+      animation-duration: 0s !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
+  `;
+  iframeDoc.head.appendChild(style);
+});
+
+    </script>
+  </body>
 </html>
