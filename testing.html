@@ -77,9 +77,11 @@ function loadContent() {
     contentFrame.style.display = 'block';
     document.getElementById('loader').style.display = 'none';
     contentFrame.contentWindow.document.querySelectorAll('a').forEach(a => {
+      const href = a.href;
+      a.removeAttribute('href');
       a.addEventListener('click', (e) => {
         e.preventDefault();
-        const newUrl = proxyUrl + encodeURIComponent(e.target.href);
+        const newUrl = proxyUrl + encodeURIComponent(href);
         contentFrame.src = newUrl;
       });
     });
