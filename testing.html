@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>incognito+</title>
+    <title>Proxy</title>
     <style>
       body {
         background-color: #1a1a1a;
         color: #fff;
         font-family: 'Open Sans', sans-serif;
       }
+      
       h3 {
         font-size: 36px;
         font-weight: bold;
         text-align: center;
         margin-top: 50px;
       }
+      
       input[type="text"] {
         width: 70%;
         height: 40px;
@@ -26,6 +28,7 @@
         background-color: #3c3c3c;
         color: #fff;
       }
+      
       button {
         height: 40px;
         font-size: 18px;
@@ -39,32 +42,27 @@
         cursor: pointer;
         padding: 10px;
       }
+      
       iframe {
         margin-top: 50px;
         width: 100%;
         height: 600px;
         border: none;
       }
-      #content {
-        border: 2px solid #ccc;
-      }
-      #error {
-        display: none;
-        text-align: center;
-        margin-top: 50px;
-        font-size: 24px;
-        font-weight: bold;
-        color: red;
-      }
     </style>
   </head>
+  
   <body>
-    <h3>incognito+</h3>
+    <h3>Proxy</h3>
+    
     <input type="text" id="search" placeholder="https://www.example.com/" autocomplete="off">
+    
     <button id="load">Run</button>
+    
     <br>
+    
     <iframe id="content"></iframe>
-    <div id="error">Unstable Network Connections. Please Try Again Later.</div>
+    
     <script>
 const proxyUrl = 'https://api.allorigins.win/raw?url=';
 const searchInput = document.getElementById('search');
@@ -75,10 +73,22 @@ function loadContent() {
   const url = searchInput.value;
   const fullUrl = proxyUrl + encodeURIComponent(url);
   contentFrame.src = fullUrl;
+  contentFrame.onload = () => {
+    contentFrame.style.display = 'block';
+    document.getElementById('loader').style.display = 'none';
+    contentFrame.contentWindow.document.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const newUrl = proxyUrl + encodeURIComponent(e.target.href);
+        contentFrame.src = newUrl;
+      });
+    });
+  };
+  contentFrame.style.display = 'none';
+  document.getElementById('loader').style.display = 'block';
 }
 
 loadButton.addEventListener('click', loadContent);
-
 searchInput.addEventListener('keyup', function(event) {
   if (event.keyCode === 13) {
     event.preventDefault();
@@ -87,72 +97,17 @@ searchInput.addEventListener('keyup', function(event) {
 });
 
 searchInput.addEventListener('click', function() {
-  searchInput.value = '';
+  searchInput.value = "";
 });
 
-// Intercept and modify all outgoing HTTP requests made by the website inside the iframe
-contentFrame.addEventListener('load', function() {
-  const proxyFrame = document.createElement('iframe');
-  proxyFrame.style.display = 'none';
-  document.body.appendChild(proxyFrame);
-
-  contentFrame.contentWindow.fetch = function(resource, init) {
-    const url = new URL(resource, contentFrame.contentWindow.location.href);
-    url.searchParams.set('__proxy_url__', url.toString());
-    url.searchParams.set('__proxy_origin__', window.location.origin);
-    url.searchParams.set('__proxy_referrer__', contentFrame.contentWindow.document.referrer);
-    return fetch(proxyUrl + encodeURIComponent(url.toString()), init);
-  };
-
-  const script = document.createElement('script');
-  script.textContent = `
-    const originalFetch = window.fetch;
-    window.fetch = function(resource, init) {
-      const url = new URL(resource, location.href);
-      if (url.searchParams.get('__proxy_url__') === url.toString()) {
-        return originalFetch(resource, init);
-      } else {
-        url.searchParams.set('__proxy_url__', url.toString());
-        url.searchParams.set('__proxy_origin__', window.location.origin);
-        url.searchParams.set('__proxy_referrer__', document.referrer);
-        return originalFetch(proxyUrl + encodeURIComponent(url.toString()), init);
-      }
-    };
-  `;
-  contentFrame.contentDocument.head.appendChild(script);
-});
-
-// Show an error message if the iframe takes more than 30 seconds to load
-const timeoutDuration = 30000;
-let timeoutId = null;
-
-function clearIframeTimeout() {
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-    timeoutId = null;
-  }
-}
-
-function setIframeTimeout() {
-  timeoutId = setTimeout(function() {
-    contentFrame.src = '';
+setTimeout(() => {
+  if (!contentFrame.contentWindow) {
     contentFrame.style.display = 'none';
+    document.getElementById('loader').style.display = 'none';
     document.getElementById('error').style.display = 'block';
-  }, timeoutDuration);
-}
+  }
+}, 30000);
 
-function resetIframeTimeout() {
-  clearIframeTimeout();
-  setIframeTimeout();
-}
-
-contentFrame.addEventListener('load', resetIframeTimeout);
-contentFrame.addEventListener('error', function() {
-  clearIframeTimeout();
-  document.getElementById('error').style.display = 'block';
-});
-
-setIframeTimeout();
-   </script>
+    </script>
   </body>
 </html>
