@@ -64,18 +64,14 @@
     <button id="load">Run</button>
     <br>
     <iframe id="content"></iframe>
-    <div id="error">Failed to load content. Please try again later.</div>
+    <div id="error">Unstable Network Connections. Please Try Again Later.</div>
     <script>
 const proxyUrl = 'https://api.allorigins.win/raw?url=';
 const searchInput = document.getElementById('search');
 const loadButton = document.getElementById('load');
 const contentFrame = document.getElementById('content');
-const proxyFrame = document.getElementById('proxy');
-
-// Set the initial proxy frame height to match the content frame height
-contentFrame.addEventListener('load', () => {
-  proxyFrame.style.height = contentFrame.contentWindow.document.body.scrollHeight + 'px';
-});
+const loadingIndicator = document.getElementById('loading-indicator');
+const errorIndicator = document.getElementById('error-indicator');
 
 function loadContent() {
   const url = searchInput.value;
@@ -84,7 +80,6 @@ function loadContent() {
 }
 
 loadButton.addEventListener('click', loadContent);
-
 searchInput.addEventListener('keyup', function(event) {
   if (event.keyCode === 13) {
     event.preventDefault();
@@ -93,38 +88,41 @@ searchInput.addEventListener('keyup', function(event) {
 });
 
 searchInput.addEventListener('click', function() {
-  searchInput.value = "";
+  searchInput.value = '';
 });
 
-// Set a timeout function to handle if the iframe takes too long to load
-const timeout = setTimeout(() => {
-  contentFrame.remove();
-  proxyFrame.insertAdjacentHTML('beforeend', '<p>Failed to load content. Please try again later.</p>');
+contentFrame.addEventListener('load', function() {
+  const currentUrl = contentFrame.contentWindow.location.href;
+  const fullUrl = proxyUrl + encodeURIComponent(currentUrl);
+  contentFrame.src = fullUrl;
+});
+
+function handleLoadStart() {
+  loadingIndicator.style.display = 'block';
+  errorIndicator.style.display = 'none';
+}
+
+function handleLoadEnd() {
+  loadingIndicator.style.display = 'none';
+  errorIndicator.style.display = 'none';
+}
+
+function handleLoadError() {
+  loadingIndicator.style.display = 'none';
+  errorIndicator.style.display = 'block';
+}
+
+contentFrame.addEventListener('loadstart', handleLoadStart);
+contentFrame.addEventListener('loadend', handleLoadEnd);
+contentFrame.addEventListener('error', handleLoadError);
+
+setTimeout(function() {
+  if (contentFrame.contentWindow.location.href === 'about:blank') {
+    loadingIndicator.style.display = 'none';
+    errorIndicator.style.display = 'block';
+  }
 }, 30000);
 
-// Check if the iframe has loaded successfully
-contentFrame.addEventListener('load', () => {
-  clearTimeout(timeout);
-  
-  // Set the proxy frame border to visible
-  proxyFrame.style.border = '1px solid #ccc';
-
-  // Set the proxy frame height to match the content frame height
-  proxyFrame.style.height = contentFrame.contentWindow.document.body.scrollHeight + 'px';
-
-  // Allow the iframe to run its scripts
-  const scriptTags = contentFrame.contentWindow.document.getElementsByTagName('script');
-  for (let i = 0; i < scriptTags.length; i++) {
-    const scriptTag = document.createElement('script');
-    scriptTag.type = scriptTags[i].type || 'text/javascript';
-    if (scriptTags[i].innerHTML) {
-      scriptTag.innerHTML = scriptTags[i].innerHTML;
-    } else if (scriptTags[i].src) {
-      scriptTag.src = scriptTags[i].src;
-    }
-    contentFrame.contentWindow.document.body.appendChild(scriptTag);
-  }
-});
     </script>
   </body>
 </html>
