@@ -47,7 +47,7 @@
       margin-top: 50px;
       width: 100%;
       height: 600px;
-      border: none;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
@@ -58,58 +58,85 @@
   <br>
   <iframe id="content" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
   <script>
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-    const searchInput = document.getElementById('search');
-    const loadButton = document.getElementById('load');
-    const contentFrame = document.getElementById('content');
+const proxyUrl = 'https://api.allorigins.win/raw?url=';
+const searchInput = document.getElementById('search');
+const loadButton = document.getElementById('load');
+const contentFrame = document.getElementById('content');
 
-    function loadContent() {
-      const url = searchInput.value;
-      const fullUrl = proxyUrl + encodeURIComponent(url);
-      contentFrame.src = fullUrl;
-    }
+function loadContent() {
+  const url = searchInput.value;
+  const fullUrl = proxyUrl + encodeURIComponent(url);
+  contentFrame.src = fullUrl;
+}
 
-    function onLoadError() {
-      contentFrame.contentDocument.open();
-      contentFrame.contentDocument.write("<h1>Page Load Error</h1><p>The page failed to load. Please check the URL and try again.</p>");
-      contentFrame.contentDocument.close();
-    }
+function onLoadError() {
+  contentFrame.contentDocument.open();
+  contentFrame.contentDocument.write("<h1>Page Load Error</h1><p>The page failed to load. Please check the URL and try again.</p>");
+  contentFrame.contentDocument.close();
+}
 
-    function onLoadTimeout() {
-      contentFrame.contentDocument.open();
-      contentFrame.contentDocument.write("<h1>Page Load Timeout</h1><p>The page failed to load within 30 seconds. Please check your internet connection and try again.</p>");
-      contentFrame.contentDocument.close();
-    }
+function onLoadTimeout() {
+  contentFrame.contentDocument.open();
+  contentFrame.contentDocument.write("<h1>Page Load Timeout</h1><p>The page failed to load within 30 seconds. Please check your internet connection and try again.</p>");
+  contentFrame.contentDocument.close();
+}
 
-    loadButton.addEventListener('click', () => {
-      contentFrame.onload = () => {
-        clearTimeout(timeout);
-      };
-      contentFrame.onerror = onLoadError;
-      const timeout = setTimeout(onLoadTimeout, 30000);
-      loadContent();
+loadButton.addEventListener('click', () => {
+  contentFrame.onload = () => {
+    clearTimeout(timeout);
+  };
+  contentFrame.onerror = onLoadError;
+  const timeout = setTimeout(onLoadTimeout, 30000);
+  loadContent();
+});
+
+searchInput.addEventListener('keyup', function(event) {
+  if (event.keyCode === 13) {
+    event.preventDefault();
+    loadButton.click();
+  }
+});
+
+searchInput.addEventListener('click', function() {
+  searchInput.value = "";
+});
+
+contentFrame.addEventListener('load', () => {
+  Array.from(contentFrame.contentDocument.querySelectorAll('a')).forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const href = a.getAttribute('href');
+      contentFrame.src = proxyUrl + encodeURIComponent(href);
     });
+  });
 
-    searchInput.addEventListener('keyup', function(event) {
-      if (event.keyCode === 13) {
-        event.preventDefault();
-        loadButton.click();
+  // Add border to iframe
+  contentFrame.style.border = "1px solid #ccc";
+
+  // Check if the URL is for WhatsApp Web
+  if (contentFrame.contentWindow.location.href.includes("web.whatsapp.com")) {
+
+    // Hide the input and button
+    searchInput.style.display = "none";
+    loadButton.style.display = "none";
+
+    // Set the iframe height to 100%
+    contentFrame.style.height = "100%";
+
+    // Add CSS to hide the header and footer of WhatsApp Web
+    const style = document.createElement('style');
+    style.innerHTML = `
+      ._1FTvM {
+        display: none !important;
       }
-    });
+      ._3v5V5 {
+        display: none !important;
+      }
+    `;
+    contentFrame.contentDocument.head.appendChild(style);
+  }
+});
 
-    searchInput.addEventListener('click', function() {
-      searchInput.value = "";
-    });
-
-    contentFrame.addEventListener('load', () => {
-      Array.from(contentFrame.contentDocument.querySelectorAll('a')).forEach(a => {
-        a.addEventListener('click', e => {
-          e.preventDefault();
-          const href = a.getAttribute('href');
-          contentFrame.src = proxyUrl + encodeURIComponent(href);
-        });
-      });
-    });
-  </script>
+</script>
 </body>
 </html>
