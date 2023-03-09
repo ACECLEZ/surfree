@@ -72,25 +72,14 @@ const contentFrame = document.getElementById('content');
 function loadContent() {
   const url = searchInput.value;
   const fullUrl = proxyUrl + encodeURIComponent(url);
+
+  // Reload the iframe with the full proxy URL
+  contentFrame.src = '';
   contentFrame.src = fullUrl;
-  contentFrame.onload = () => {
-    contentFrame.style.display = 'block';
-    document.getElementById('loader').style.display = 'none';
-    contentFrame.contentWindow.document.querySelectorAll('a').forEach(a => {
-      const href = a.href;
-      a.removeAttribute('href');
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        const newUrl = proxyUrl + encodeURIComponent(href);
-        contentFrame.src = newUrl;
-      });
-    });
-  };
-  contentFrame.style.display = 'none';
-  document.getElementById('loader').style.display = 'block';
 }
 
 loadButton.addEventListener('click', loadContent);
+
 searchInput.addEventListener('keyup', function(event) {
   if (event.keyCode === 13) {
     event.preventDefault();
@@ -102,13 +91,18 @@ searchInput.addEventListener('click', function() {
   searchInput.value = "";
 });
 
-setTimeout(() => {
-  if (!contentFrame.contentWindow) {
-    contentFrame.style.display = 'none';
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('error').style.display = 'block';
+// Intercept all links in the iframe and use the proxy URL
+contentFrame.addEventListener('load', function() {
+  const links = contentFrame.contentWindow.document.getElementsByTagName('a');
+  for (let i = 0; i < links.length; i++) {
+    const link = links[i];
+    link.addEventListener('click', function(event) {
+      event.preventDefault();
+      const fullUrl = proxyUrl + encodeURIComponent(link.href);
+      contentFrame.src = fullUrl;
+    });
   }
-}, 30000);
+});
 
     </script>
   </body>
