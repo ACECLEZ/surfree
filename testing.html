@@ -70,8 +70,6 @@ const proxyUrl = 'https://api.allorigins.win/raw?url=';
 const searchInput = document.getElementById('search');
 const loadButton = document.getElementById('load');
 const contentFrame = document.getElementById('content');
-const loadingIndicator = document.getElementById('loading-indicator');
-const errorIndicator = document.getElementById('error-indicator');
 
 function loadContent() {
   const url = searchInput.value;
@@ -80,6 +78,7 @@ function loadContent() {
 }
 
 loadButton.addEventListener('click', loadContent);
+
 searchInput.addEventListener('keyup', function(event) {
   if (event.keyCode === 13) {
     event.preventDefault();
@@ -91,38 +90,69 @@ searchInput.addEventListener('click', function() {
   searchInput.value = '';
 });
 
+// Intercept and modify all outgoing HTTP requests made by the website inside the iframe
 contentFrame.addEventListener('load', function() {
-  const currentUrl = contentFrame.contentWindow.location.href;
-  const fullUrl = proxyUrl + encodeURIComponent(currentUrl);
-  contentFrame.src = fullUrl;
+  const proxyFrame = document.createElement('iframe');
+  proxyFrame.style.display = 'none';
+  document.body.appendChild(proxyFrame);
+
+  contentFrame.contentWindow.fetch = function(resource, init) {
+    const url = new URL(resource, contentFrame.contentWindow.location.href);
+    url.searchParams.set('__proxy_url__', url.toString());
+    url.searchParams.set('__proxy_origin__', window.location.origin);
+    url.searchParams.set('__proxy_referrer__', contentFrame.contentWindow.document.referrer);
+    return fetch(proxyUrl + encodeURIComponent(url.toString()), init);
+  };
+
+  const script = document.createElement('script');
+  script.textContent = `
+    const originalFetch = window.fetch;
+    window.fetch = function(resource, init) {
+      const url = new URL(resource, location.href);
+      if (url.searchParams.get('__proxy_url__') === url.toString()) {
+        return originalFetch(resource, init);
+      } else {
+        url.searchParams.set('__proxy_url__', url.toString());
+        url.searchParams.set('__proxy_origin__', window.location.origin);
+        url.searchParams.set('__proxy_referrer__', document.referrer);
+        return originalFetch(proxyUrl + encodeURIComponent(url.toString()), init);
+      }
+    };
+  `;
+  contentFrame.contentDocument.head.appendChild(script);
 });
 
-function handleLoadStart() {
-  loadingIndicator.style.display = 'block';
-  errorIndicator.style.display = 'none';
-}
+// Show an error message if the iframe takes more than 30 seconds to load
+const timeoutDuration = 30000;
+let timeoutId = null;
 
-function handleLoadEnd() {
-  loadingIndicator.style.display = 'none';
-  errorIndicator.style.display = 'none';
-}
-
-function handleLoadError() {
-  loadingIndicator.style.display = 'none';
-  errorIndicator.style.display = 'block';
-}
-
-contentFrame.addEventListener('loadstart', handleLoadStart);
-contentFrame.addEventListener('loadend', handleLoadEnd);
-contentFrame.addEventListener('error', handleLoadError);
-
-setTimeout(function() {
-  if (contentFrame.contentWindow.location.href === 'about:blank') {
-    loadingIndicator.style.display = 'none';
-    errorIndicator.style.display = 'block';
+function clearIframeTimeout() {
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    timeoutId = null;
   }
-}, 30000);
+}
 
-    </script>
+function setIframeTimeout() {
+  timeoutId = setTimeout(function() {
+    contentFrame.src = '';
+    contentFrame.style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+  }, timeoutDuration);
+}
+
+function resetIframeTimeout() {
+  clearIframeTimeout();
+  setIframeTimeout();
+}
+
+contentFrame.addEventListener('load', resetIframeTimeout);
+contentFrame.addEventListener('error', function() {
+  clearIframeTimeout();
+  document.getElementById('error').style.display = 'block';
+});
+
+setIframeTimeout();
+   </script>
   </body>
 </html>
